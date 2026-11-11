@@ -1,4 +1,7 @@
 #include "RetroEngine.hpp"
+#if RETRO_PLATFORM == RETRO_WEB
+#include <emscripten.h>
+#endif
 #if RETRO_PLATFORM == RETRO_UWP
 #include <winrt/base.h>
 #include <winrt/Windows.Storage.h>
@@ -377,8 +380,13 @@ void RetroEngine::Run()
 #if !RETRO_USE_ORIGINAL_CODE
         if (!vsync) {
             curTicks = SDL_GetPerformanceCounter();
-            if (curTicks < prevTicks + targetFreq)
+            if (curTicks < prevTicks + targetFreq) {
+#if RETRO_PLATFORM == RETRO_WEB
+                // Yield to the browser instead of busy-spinning between frames.
+                emscripten_sleep(1);
+#endif
                 continue;
+            }
             prevTicks = curTicks;
         }
 #endif
@@ -509,6 +517,11 @@ void RetroEngine::Run()
 #endif
         frameStep      = false;
         Engine.message = MESSAGE_NONE;
+
+#if RETRO_PLATFORM == RETRO_WEB
+        // Let Chrome paint the canvas and dispatch input between frames.
+        emscripten_sleep(1);
+#endif
 
 #if RETRO_USE_HAPTICS
         int hapticID = GetHapticEffectNum();

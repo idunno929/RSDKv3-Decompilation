@@ -24,6 +24,7 @@ target_link_options(RetroEngine PRIVATE
     -sALLOW_MEMORY_GROWTH=1
     -sFORCE_FILESYSTEM=1
     -sINVOKE_RUN=0
+    -sASYNCIFY=1
     -sEXPORTED_RUNTIME_METHODS=callMain
     -lidbfs.js
     -sPTHREAD_POOL_SIZE=2
