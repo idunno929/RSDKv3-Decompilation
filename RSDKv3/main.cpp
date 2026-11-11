@@ -1,4 +1,7 @@
 #include "RetroEngine.hpp"
+#ifdef __EMSCRIPTEN__
+#include <emscripten.h>
+#endif
 
 #if !RETRO_USE_ORIGINAL_CODE
 
@@ -54,7 +57,27 @@ int main(int argc, char *argv[])
     parseArguments(argc, argv);
 #endif
 
+#ifdef __EMSCRIPTEN__
+    EM_ASM({
+        var output = document.getElementById("output");
+        if (output) {
+            output.style.display = "block";
+            output.value += "Web startup: main() entered\\n";
+            output.scrollTop = output.scrollHeight;
+        }
+    });
+#endif
     Engine.Init();
+#ifdef __EMSCRIPTEN__
+    EM_ASM({
+        var output = document.getElementById("output");
+        if (output) {
+            output.style.display = "block";
+            output.value += "Web startup: Engine.Init() returned\\n";
+            output.scrollTop = output.scrollHeight;
+        }
+    });
+#endif
     Engine.Run();
 
 #if !RETRO_USE_ORIGINAL_CODE
