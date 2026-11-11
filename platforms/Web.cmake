@@ -1,7 +1,8 @@
 # Emscripten / browser build.
 #
 # The software renderer is used initially to avoid desktop OpenGL/GLEW.
-# SDL2, Ogg, Vorbis and Theora are compiled for WebAssembly by this target.
+# The standalone HTML package embeds its JavaScript and WebAssembly so it
+# can be opened directly from a local Chromebook file.
 
 add_executable(RetroEngine ${RETRO_FILES})
 
@@ -20,12 +21,12 @@ set(THEORA_FLAGS -O2 -fPIC -DHAVE_CONFIG_H)
 target_compile_options(RetroEngine PRIVATE -O2 -sUSE_SDL=2)
 target_link_options(RetroEngine PRIVATE
     -sUSE_SDL=2
+    -sSINGLE_FILE=1
     -sALLOW_MEMORY_GROWTH=1
     -sFORCE_FILESYSTEM=1
     -sINVOKE_RUN=0
     -sASYNCIFY=1
     -sEXPORTED_RUNTIME_METHODS=callMain
-    -lidbfs.js
     -sEXIT_RUNTIME=0
     --pre-js "${CMAKE_CURRENT_LIST_DIR}/web-loader.js"
 )
