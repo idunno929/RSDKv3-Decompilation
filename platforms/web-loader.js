@@ -2,6 +2,13 @@
 var Module = typeof Module !== "undefined" ? Module : {};
 Module.noInitialRun = true;
 window.rsdkLaunchStarted = false;
+function rsdkWriteOutput(message) {
+    var output = document.getElementById("output");
+    if (!output) return;
+    output.style.display = "block";
+    output.value += String(message) + "\n";
+    output.scrollTop = output.scrollHeight;
+}
 Module.print = function (text) {
     var output = document.getElementById("output");
     if (output) {
@@ -102,8 +109,11 @@ Module.printErr = function (text) {
                     canvas.tabIndex = 0;
                     canvas.focus();
                 }
+                rsdkWriteOutput("Launcher: Start Game clicked; calling Module.callMain.");
                 Module.callMain([]);
+                rsdkWriteOutput("Launcher: Module.callMain returned.");
             } catch (error) {
+                rsdkWriteOutput("Launcher error: " + (error && error.stack ? error.stack : error));
                 console.error(error);
                 launcherStatus.textContent = "Could not prepare Data.rsdk for the engine: " + error;
                 started = false;
