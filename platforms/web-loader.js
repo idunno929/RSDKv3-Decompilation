@@ -44,6 +44,13 @@ Module.onRuntimeInitialized = function () {
     var status = document.getElementById("rsdk-status");
     var started = false;
 
+    // Keep fullscreen available after the start panel is dismissed.
+    fullscreen.style.position = "fixed";
+    fullscreen.style.top = "12px";
+    fullscreen.style.right = "12px";
+    fullscreen.style.zIndex = "1000";
+    document.body.appendChild(fullscreen);
+
     function hasDataFile() {
         return FS.analyzePath("/persistent/Data.rsdk").exists;
     }
@@ -103,7 +110,7 @@ Module.onRuntimeInitialized = function () {
         Module.callMain([]);
     });
     fullscreen.addEventListener("click", function () {
-        var target = canvas || document.documentElement;
+        var target = document.documentElement;
         if (target.requestFullscreen) target.requestFullscreen();
     });
 
