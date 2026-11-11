@@ -92,14 +92,6 @@ Module.onRuntimeInitialized = function () {
         status.textContent = "Starting the engine…";
         panel.style.display = "none";
         if (canvas) canvas.focus();
-        // Periodically flush save/settings changes to IndexedDB.
-        window.setInterval(function () {
-            syncFilesystem().catch(function (error) { console.error("Save sync failed:", error); });
-        }, 10000);
-        document.addEventListener("visibilitychange", function () {
-            if (document.hidden)
-                syncFilesystem().catch(function (error) { console.error("Save sync failed:", error); });
-        });
         Module.callMain([]);
     });
     fullscreen.addEventListener("click", function () {
