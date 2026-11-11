@@ -100,6 +100,10 @@ typedef unsigned int uint;
 #define BASE_PATH            ""
 #define DEFAULT_SCREEN_XSIZE 424
 #define DEFAULT_FULLSCREEN   false
+#elif RETRO_PLATFORM == RETRO_WEB
+#define BASE_PATH            "/persistent/"
+#define DEFAULT_SCREEN_XSIZE 960
+#define DEFAULT_FULLSCREEN   false
 #else
 #ifndef BASE_PATH
 #define BASE_PATH            ""

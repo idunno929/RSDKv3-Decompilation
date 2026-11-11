@@ -21,9 +21,11 @@ target_compile_options(RetroEngine PRIVATE -O2 -pthread -sUSE_SDL=2)
 target_link_options(RetroEngine PRIVATE
     -pthread
     -sUSE_SDL=2
-    -sUSE_SDL_MIXER=0
     -sALLOW_MEMORY_GROWTH=1
     -sFORCE_FILESYSTEM=1
+    -sINVOKE_RUN=0
+    -sEXPORTED_RUNTIME_METHODS=callMain
+    -lidbfs.js
     -sPTHREAD_POOL_SIZE=2
     -sEXIT_RUNTIME=0
 )
