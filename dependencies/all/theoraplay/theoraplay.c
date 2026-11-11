@@ -24,6 +24,13 @@
 #define THEORAPLAY_THREAD_T    HANDLE
 #define THEORAPLAY_MUTEX_T     HANDLE
 #define sleepms(x) Sleep(x)
+#elif defined(__EMSCRIPTEN__)
+// The browser build currently skips OGV playback. Keep this translation unit
+// free of pthread/SharedArrayBuffer dependencies until an asynchronous
+// single-threaded decoder is available.
+#define THEORAPLAY_THREAD_T    int
+#define THEORAPLAY_MUTEX_T     int
+#define sleepms(x) ((void)0)
 #else
 #include <pthread.h>
 #include <unistd.h>
@@ -138,7 +145,19 @@ typedef struct TheoraDecoder
 } TheoraDecoder;
 
 
-#ifdef _WIN32
+#if defined(__EMSCRIPTEN__)
+static inline int Thread_Create(TheoraDecoder *ctx, void *(*routine) (void*))
+{
+    (void)ctx;
+    (void)routine;
+    return 1; // Threaded OGV decoding is intentionally unavailable on web.
+}
+static inline void Thread_Join(THEORAPLAY_THREAD_T thread) { (void)thread; }
+static inline int Mutex_Create(TheoraDecoder *ctx) { ctx->lock = 0; return 0; }
+static inline void Mutex_Destroy(THEORAPLAY_MUTEX_T mutex) { (void)mutex; }
+static inline void Mutex_Lock(THEORAPLAY_MUTEX_T mutex) { (void)mutex; }
+static inline void Mutex_Unlock(THEORAPLAY_MUTEX_T mutex) { (void)mutex; }
+#elif defined(_WIN32)
 static inline int Thread_Create(TheoraDecoder *ctx, void *(*routine) (void*))
 {
     ctx->worker = CreateThread(
