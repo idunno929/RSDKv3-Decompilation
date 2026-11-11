@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Sonic CD — RSDKv3</title>
+<style>
+html,body{margin:0;min-height:100%;background:#101522;color:#fff;font-family:system-ui,sans-serif}
+body{padding:18px 12px;box-sizing:border-box}
+#rsdk-launcher{box-sizing:border-box;width:min(92%,620px);margin:3vh auto 18px;padding:26px 22px;text-align:center;background:#1b263b;border:1px solid #34445f;border-radius:18px;box-shadow:0 16px 50px #0008}
+#rsdk-launcher h1{font-size:clamp(25px,5vw,38px);margin:0 0 8px}
+#rsdk-launcher p{line-height:1.5;color:#d3dced}
+.rsdk-button{display:inline-block;margin:7px;padding:13px 20px;border:0;border-radius:10px;background:#f5c542;color:#172033;font-size:16px;font-weight:700;cursor:pointer}
+.rsdk-button:disabled{opacity:.45;cursor:default}
+#rsdk-status{min-height:48px;margin-top:14px;font-size:14px}
+#canvas{display:block;width:min(100%,960px);height:auto;margin:12px auto;background:#000}
+#status,#progress,#output{display:none}
+</style>
+</head>
+<body>
+<main id="rsdk-launcher">
+<h1>Sonic CD — RSDKv3</h1>
+<p>Choose your legally obtained <b>Data.rsdk</b> file, then start the game.</p>
+<input id="rsdk-file" type="file" accept=".rsdk,application/octet-stream" hidden>
+<button class="rsdk-button" id="rsdk-choose">Choose Data.rsdk</button>
+<button class="rsdk-button" id="rsdk-start" disabled>Start Game</button>
+<p id="rsdk-status" role="status">Preparing the game engine… You can select your Data.rsdk while it loads.</p>
+</main>
+<div id="status">Preparing engine…</div>
+<progress id="progress" value="0" max="100"></progress>
+<canvas id="canvas" oncontextmenu="event.preventDefault()" tabindex="-1"></canvas>
+<textarea id="output" rows="8"></textarea>
+{{{ SCRIPT }}}
+</body>
+</html>
