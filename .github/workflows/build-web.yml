@@ -96,6 +96,7 @@ jobs:
           cp platforms/web/index.html build-web/index.html
           cp platforms/web/coi-serviceworker.js build-web/coi-serviceworker.js
           mv build-web/RSDKv3.html build-web/engine.html
+          touch build-web/.nojekyll
 
       - name: Upload browser build
         uses: actions/upload-artifact@v4
@@ -104,7 +105,38 @@ jobs:
           path: |
             build-web/*.html
             build-web/coi-serviceworker.js
+            build-web/.nojekyll
             build-web/*.js
             build-web/*.wasm
             build-web/*.data
           if-no-files-found: error
+
+  deploy-pages:
+    if: github.ref == 'refs/heads/web' && github.event_name != 'pull_request'
+    needs: webassembly
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Download browser build
+        uses: actions/download-artifact@v4
+        with:
+          name: rsdkv3-webassembly
+          path: dist
+
+      - name: Configure GitHub Pages
+        uses: actions/configure-pages@v5
+
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v4
+        with:
+          path: dist
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
