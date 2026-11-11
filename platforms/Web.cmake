@@ -17,9 +17,8 @@ set(OGG_FLAGS -O2 -fPIC -DHAVE_CONFIG_H)
 set(VORBIS_FLAGS -O2 -fPIC -DHAVE_CONFIG_H)
 set(THEORA_FLAGS -O2 -fPIC -DHAVE_CONFIG_H)
 
-target_compile_options(RetroEngine PRIVATE -O2 -pthread -sUSE_SDL=2)
+target_compile_options(RetroEngine PRIVATE -O2 -sUSE_SDL=2)
 target_link_options(RetroEngine PRIVATE
-    -pthread
     -sUSE_SDL=2
     -sALLOW_MEMORY_GROWTH=1
     -sFORCE_FILESYSTEM=1
@@ -27,7 +26,6 @@ target_link_options(RetroEngine PRIVATE
     -sASYNCIFY=1
     -sEXPORTED_RUNTIME_METHODS=callMain
     -lidbfs.js
-    -sPTHREAD_POOL_SIZE=2
     -sEXIT_RUNTIME=0
     --pre-js "${CMAKE_CURRENT_LIST_DIR}/web-loader.js"
 )
