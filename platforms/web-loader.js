@@ -1,12 +1,44 @@
-// Standalone Chromebook launcher for the RSDKv3 WebAssembly build.
-// This UI is created before WebAssembly initialization so it remains visible
-// even while the engine is compiling. The game starts only after Data.rsdk is chosen.
+// Chromebook launcher for the RSDKv3 WebAssembly build.
 var Module = typeof Module !== "undefined" ? Module : {};
 Module.noInitialRun = true;
 Module.print = function (text) { console.log(text); };
 Module.printErr = function (text) { console.error(text); };
 
 (function () {
+    var engineReady = false;
+    var started = false;
+    var launcherStatus = null;
+    var launcherPanel = null;
+
+    function updateStart() {
+        var start = document.getElementById("rsdk-start");
+        var selectedData = window.rsdkSelectedData;
+        if (!start) return;
+        start.disabled = !(selectedData && engineReady && !started);
+        if (started || !launcherStatus) return;
+        if (selectedData && engineReady)
+            launcherStatus.textContent = "Data.rsdk is ready. Select Start Game to launch Sonic CD.";
+        else if (selectedData)
+            launcherStatus.textContent = "Data.rsdk selected. Waiting for the engine to finish preparing…";
+        else if (engineReady)
+            launcherStatus.textContent = "Engine ready. Choose your Data.rsdk file to continue.";
+    }
+
+    // Register these callbacks immediately. Emscripten can finish initializing
+    // before the browser fires DOMContentLoaded.
+    Module.onRuntimeInitialized = function () {
+        engineReady = true;
+        updateStart();
+    };
+    Module.onAbort = function (reason) {
+        if (launcherStatus) launcherStatus.textContent = "The engine stopped while starting: " + reason;
+        if (launcherPanel) launcherPanel.style.display = "block";
+        console.error("RSDKv3 stopped:", reason);
+    };
+    Module.setStatus = function (message) {
+        if (!started && launcherStatus && message) launcherStatus.textContent = message;
+    };
+
     function createLauncher() {
         if (document.getElementById("rsdk-launcher")) return;
 
@@ -30,54 +62,41 @@ Module.printErr = function (text) { console.error(text); };
             '<button class="rsdk-button" id="rsdk-start" disabled>Start Game</button>' +
             '<p id="rsdk-status" role="status">Preparing the game engine… You can select your Data.rsdk while it loads.</p>';
         document.body.insertBefore(panel, document.body.firstChild);
+        launcherPanel = panel;
 
         var picker = document.getElementById("rsdk-file");
         var choose = document.getElementById("rsdk-choose");
         var start = document.getElementById("rsdk-start");
-        var status = document.getElementById("rsdk-status");
-        var selectedData = null;
-        var engineReady = false;
-        var started = false;
-
-        function updateStart() {
-            start.disabled = !(selectedData && engineReady && !started);
-            if (started) return;
-            if (selectedData && engineReady)
-                status.textContent = "Data.rsdk is ready. Select Start Game to launch Sonic CD.";
-            else if (selectedData)
-                status.textContent = "Data.rsdk selected. Waiting for the engine to finish preparing…";
-            else if (engineReady)
-                status.textContent = "Engine ready. Choose your Data.rsdk file to continue.";
-        }
+        launcherStatus = document.getElementById("rsdk-status");
+        window.rsdkSelectedData = null;
 
         choose.addEventListener("click", function () { picker.click(); });
         picker.addEventListener("change", async function () {
             var file = picker.files && picker.files[0];
             if (!file) return;
             if (!/\.rsdk$/i.test(file.name)) {
-                status.textContent = "That file does not have an .rsdk extension. Please choose Data.rsdk.";
+                launcherStatus.textContent = "That file does not have an .rsdk extension. Please choose Data.rsdk.";
                 return;
             }
             choose.disabled = true;
-            status.textContent = "Reading Data.rsdk…";
+            launcherStatus.textContent = "Reading Data.rsdk…";
             try {
-                selectedData = new Uint8Array(await file.arrayBuffer());
-                status.textContent = "Data.rsdk loaded into memory.";
+                window.rsdkSelectedData = new Uint8Array(await file.arrayBuffer());
                 updateStart();
             } catch (error) {
                 console.error(error);
-                selectedData = null;
-                status.textContent = "The browser could not read that file. Please try selecting it again.";
+                window.rsdkSelectedData = null;
+                launcherStatus.textContent = "The browser could not read that file. Please try selecting it again.";
             } finally {
                 choose.disabled = false;
             }
         });
 
         start.addEventListener("click", function () {
-            if (!selectedData || !engineReady || started) return;
+            var data = window.rsdkSelectedData;
+            if (!data || !engineReady || started) return;
             try {
-                // The engine looks for Engine.dataFile (Data.rsdk) in its working directory.
-                FS.writeFile("/Data.rsdk", selectedData);
+                FS.writeFile("/Data.rsdk", data);
                 started = true;
                 panel.style.display = "none";
                 var canvas = document.getElementById("canvas");
@@ -88,25 +107,14 @@ Module.printErr = function (text) { console.error(text); };
                 Module.callMain([]);
             } catch (error) {
                 console.error(error);
-                status.textContent = "Could not prepare Data.rsdk for the engine: " + error;
+                launcherStatus.textContent = "Could not prepare Data.rsdk for the engine: " + error;
                 started = false;
                 panel.style.display = "block";
                 updateStart();
             }
         });
 
-        Module.onRuntimeInitialized = function () {
-            engineReady = true;
-            updateStart();
-        };
-        Module.onAbort = function (reason) {
-            status.textContent = "The engine stopped while starting: " + reason;
-            panel.style.display = "block";
-            console.error("RSDKv3 stopped:", reason);
-        };
-        Module.setStatus = function (message) {
-            if (!started && message) status.textContent = message;
-        };
+        updateStart();
     }
 
     if (document.readyState === "loading")
