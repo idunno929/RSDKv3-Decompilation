@@ -74,7 +74,7 @@ if(COMPILE_OGG)
 
     target_compile_options(libogg PRIVATE ${OGG_FLAGS})
 
-    target_include_directories(libogg PRIVATE ${OGG_DIR}/include)
+    target_include_directories(libogg PRIVATE ${OGG_DIR} ${OGG_DIR}/include)
     target_include_directories(RetroEngine PRIVATE ${OGG_DIR}/include)
     target_link_libraries(RetroEngine libogg)
 endif()
@@ -113,6 +113,7 @@ if(COMPILE_VORBIS)
 
     target_include_directories(libvorbis
     PRIVATE
+    ${VORBIS_DIR}
     ${VORBIS_DIR}/include
     ${VORBIS_DIR}/lib
     ${OGG_DIR}/include
@@ -156,7 +157,7 @@ if(COMPILE_THEORA)
 
     target_compile_options(libtheora PRIVATE ${THEORA_FLAGS})
 
-    target_include_directories(libtheora PRIVATE ${THEORA_DIR}/include ${OGG_DIR}/include)
+    target_include_directories(libtheora PRIVATE ${THEORA_DIR} ${THEORA_DIR}/include ${OGG_DIR}/include)
     target_include_directories(RetroEngine PRIVATE ${THEORA_DIR}/include)
     target_link_libraries(RetroEngine libtheora)
 endif()
