@@ -37,6 +37,14 @@ static void videoClose(THEORAPLAY_Io *io)
 
 void PlayVideoFile(char *filePath)
 {
+#if RETRO_PLATFORM == RETRO_WEB
+    // The current browser target is single-threaded. OGV cutscenes use
+    // TheoraPlay's pthread decoder, so skip them rather than aborting the
+    // entire WebAssembly engine. Gameplay audio remains handled by SDL.
+    (void)filePath;
+    PrintLog("OGV video playback is not yet supported in the single-threaded web build.");
+    return;
+#endif
     char pathBuffer[0x100];
     int len = StrLength(filePath);
 
