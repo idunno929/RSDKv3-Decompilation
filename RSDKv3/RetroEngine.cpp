@@ -305,16 +305,37 @@ void RetroEngine::Init()
     StrCopy(dest, BASE_PATH);
     StrAdd(dest, Engine.dataFile);
 #endif
-    CheckRSDKFile(dest);
+    bool dataFileFound = CheckRSDKFile(dest);
+#if RETRO_PLATFORM == RETRO_WEB
+    PrintLog("Web startup: Data.rsdk %s", dataFileFound ? "found" : "not found");
+#endif
 
     Engine.useFBTexture = Engine.scalingMode;
 
     gameMode = ENGINE_EXITGAME;
     running  = false;
-    if (LoadGameConfig("Data/Game/GameConfig.bin")) {
-        if (InitRenderDevice()) {
-            if (InitAudioPlayback()) {
+    bool configLoaded = LoadGameConfig("Data/Game/GameConfig.bin");
+#if RETRO_PLATFORM == RETRO_WEB
+    PrintLog("Web startup: game configuration %s", configLoaded ? "loaded" : "FAILED");
+#endif
+    if (configLoaded) {
+        bool renderReady = InitRenderDevice();
+#if RETRO_PLATFORM == RETRO_WEB
+        PrintLog("Web startup: renderer %s", renderReady ? "initialized" : "FAILED");
+#endif
+        if (renderReady) {
+            bool audioReady = InitAudioPlayback();
+#if RETRO_PLATFORM == RETRO_WEB
+            PrintLog("Web startup: audio %s", audioReady ? "initialized" : "FAILED");
+#endif
+            if (audioReady) {
+#if RETRO_PLATFORM == RETRO_WEB
+                PrintLog("Web startup: initializing first stage");
+#endif
                 InitFirstStage();
+#if RETRO_PLATFORM == RETRO_WEB
+                PrintLog("Web startup: first stage initialized");
+#endif
                 ClearScriptData();
                 initialised = true;
                 running     = true;
