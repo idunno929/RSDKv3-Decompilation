@@ -1,5 +1,5 @@
 #include "RetroEngine.hpp"
-#if RETRO_PLATFORM == RETRO_WEB
+#ifdef __EMSCRIPTEN__
 #include <emscripten.h>
 #endif
 #if RETRO_PLATFORM == RETRO_UWP
@@ -306,7 +306,7 @@ void RetroEngine::Init()
     StrAdd(dest, Engine.dataFile);
 #endif
     bool dataFileFound = CheckRSDKFile(dest);
-#if RETRO_PLATFORM == RETRO_WEB
+#ifdef __EMSCRIPTEN__
     PrintLog("Web startup: Data.rsdk %s", dataFileFound ? "found" : "not found");
 #endif
 
@@ -315,25 +315,25 @@ void RetroEngine::Init()
     gameMode = ENGINE_EXITGAME;
     running  = false;
     bool configLoaded = LoadGameConfig("Data/Game/GameConfig.bin");
-#if RETRO_PLATFORM == RETRO_WEB
+#ifdef __EMSCRIPTEN__
     PrintLog("Web startup: game configuration %s", configLoaded ? "loaded" : "FAILED");
 #endif
     if (configLoaded) {
         bool renderReady = InitRenderDevice();
-#if RETRO_PLATFORM == RETRO_WEB
+#ifdef __EMSCRIPTEN__
         PrintLog("Web startup: renderer %s", renderReady ? "initialized" : "FAILED");
 #endif
         if (renderReady) {
             bool audioReady = InitAudioPlayback();
-#if RETRO_PLATFORM == RETRO_WEB
+#ifdef __EMSCRIPTEN__
             PrintLog("Web startup: audio %s", audioReady ? "initialized" : "FAILED");
 #endif
             if (audioReady) {
-#if RETRO_PLATFORM == RETRO_WEB
+#ifdef __EMSCRIPTEN__
                 PrintLog("Web startup: initializing first stage");
 #endif
                 InitFirstStage();
-#if RETRO_PLATFORM == RETRO_WEB
+#ifdef __EMSCRIPTEN__
                 PrintLog("Web startup: first stage initialized");
 #endif
                 ClearScriptData();
@@ -402,7 +402,7 @@ void RetroEngine::Run()
         if (!vsync) {
             curTicks = SDL_GetPerformanceCounter();
             if (curTicks < prevTicks + targetFreq) {
-#if RETRO_PLATFORM == RETRO_WEB
+#ifdef __EMSCRIPTEN__
                 // Yield to the browser instead of busy-spinning between frames.
                 emscripten_sleep(1);
 #endif
@@ -539,7 +539,7 @@ void RetroEngine::Run()
         frameStep      = false;
         Engine.message = MESSAGE_NONE;
 
-#if RETRO_PLATFORM == RETRO_WEB
+#ifdef __EMSCRIPTEN__
         // Let Chrome paint the canvas and dispatch input between frames.
         emscripten_sleep(1);
 #endif
