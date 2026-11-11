@@ -1,8 +1,25 @@
 // Chromebook launcher for the RSDKv3 WebAssembly build.
 var Module = typeof Module !== "undefined" ? Module : {};
 Module.noInitialRun = true;
-Module.print = function (text) { console.log(text); };
-Module.printErr = function (text) { console.error(text); };
+window.rsdkLaunchStarted = false;
+Module.print = function (text) {
+    var output = document.getElementById("output");
+    if (output) {
+        output.value += String(text) + "\\n";
+        if (window.rsdkLaunchStarted) output.style.display = "block";
+        output.scrollTop = output.scrollHeight;
+    }
+    console.log(text);
+};
+Module.printErr = function (text) {
+    var output = document.getElementById("output");
+    if (output) {
+        output.value += "ERROR: " + String(text) + "\\n";
+        if (window.rsdkLaunchStarted) output.style.display = "block";
+        output.scrollTop = output.scrollHeight;
+    }
+    console.error(text);
+};
 
 (function () {
     var engineReady = false;
@@ -78,6 +95,7 @@ Module.printErr = function (text) { console.error(text); };
             try {
                 FS.writeFile("/Data.rsdk", data);
                 started = true;
+                window.rsdkLaunchStarted = true;
                 panel.style.display = "none";
                 var canvas = document.getElementById("canvas");
                 if (canvas) {
