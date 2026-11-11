@@ -88,21 +88,22 @@ jobs:
         run: cmake --build build-web --parallel 2
 
       - name: Package Chromebook build
+        shell: bash
         run: |
+          set -euxo pipefail
           cat > build-web/README-Web.txt <<'EOF'
           RSDKv3 Chromebook Build
           =======================
 
           1. Extract this ZIP into a folder.
-          2. Keep RSDKv3.html and RSDKv3.js together in that folder.
-          3. Open RSDKv3.html in Chrome.
-          4. Choose your legally obtained Data.rsdk file.
-          5. Wait for the engine to become ready, then choose Start Game.
+          2. Open RSDKv3.html in Chrome.
+          3. Choose your legally obtained Data.rsdk file.
+          4. Wait for the engine to become ready, then choose Start Game.
 
-          The WebAssembly binary is embedded inside RSDKv3.js. The HTML file
-          loads that JavaScript file, so both files must remain together.
-          This build is intended for local-file testing without GitHub Pages,
-          Linux, Developer Mode, or a local server.
+          This is a single-file HTML build: JavaScript and WebAssembly are
+          embedded in RSDKv3.html. No separate .js or .wasm file is needed.
+          It is intended for local-file testing without GitHub Pages, Linux,
+          Developer Mode, or a local server.
 
           The selected Data.rsdk is held in memory for the current session.
           Select it again after closing or refreshing the page. Browser save
@@ -112,9 +113,9 @@ jobs:
           Keep the original game data file safe; this launcher does not modify it.
           EOF
           cd build-web
-          test -f RSDKv3.html
-          test -f RSDKv3.js
-          zip -9 RSDKv3-Web.zip RSDKv3.html RSDKv3.js README-Web.txt
+          test -s RSDKv3.html
+          zip -9 RSDKv3-Web.zip RSDKv3.html README-Web.txt
+          unzip -l RSDKv3-Web.zip
 
       - name: Upload downloadable browser build
         uses: actions/upload-artifact@v4
