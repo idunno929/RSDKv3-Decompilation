@@ -69,7 +69,9 @@ jobs:
           emmake make install
 
           cd "$GITHUB_WORKSPACE/dependencies/web/libtheora"
-          emconfigure ./configure --prefix="$PREFIX" --disable-shared --enable-static --disable-encode --disable-examples --disable-spec --disable-doc \
+          # Theora 1.1.1's x86/MMX assembly cannot be assembled for WebAssembly.
+          # Keep the portable C decoder and disable only architecture-specific optimizations.
+          emconfigure ./configure --prefix="$PREFIX" --disable-shared --enable-static --disable-asm --disable-encode --disable-examples --disable-spec --disable-doc \
             --with-ogg="$PREFIX" \
             --with-vorbis="$PREFIX"
           emmake make -j2
