@@ -24,8 +24,6 @@ Module.printErr = function (text) { console.error(text); };
             launcherStatus.textContent = "Engine ready. Choose your Data.rsdk file to continue.";
     }
 
-    // Register these callbacks immediately. Emscripten can finish initializing
-    // before the browser fires DOMContentLoaded.
     Module.onRuntimeInitialized = function () {
         engineReady = true;
         updateStart();
@@ -40,35 +38,17 @@ Module.printErr = function (text) { console.error(text); };
     };
 
     function createLauncher() {
-        if (document.getElementById("rsdk-launcher")) return;
-
-        var style = document.createElement("style");
-        style.textContent =
-            "html,body{margin:0;min-height:100%;background:#101522;color:#fff;font-family:system-ui,sans-serif}" +
-            "#rsdk-launcher{box-sizing:border-box;width:min(92%,620px);margin:7vh auto 24px;padding:28px 22px;text-align:center;background:#1b263b;border:1px solid #34445f;border-radius:18px;box-shadow:0 16px 50px #0008}" +
-            "#rsdk-launcher h1{font-size:clamp(25px,5vw,38px);margin:0 0 8px}#rsdk-launcher p{line-height:1.5;color:#d3dced}" +
-            ".rsdk-button{display:inline-block;margin:7px;padding:13px 20px;border:0;border-radius:10px;background:#f5c542;color:#172033;font-size:16px;font-weight:700;cursor:pointer}" +
-            ".rsdk-button:disabled{opacity:.45;cursor:default}#rsdk-status{min-height:48px;margin-top:14px;font-size:14px}" +
-            "#canvas{display:block;width:min(100%,960px);height:auto;margin:12px auto;background:#000}";
-        document.head.appendChild(style);
-
-        var panel = document.createElement("main");
-        panel.id = "rsdk-launcher";
-        panel.innerHTML =
-            '<h1>Sonic CD — RSDKv3</h1>' +
-            '<p>Choose your legally obtained <b>Data.rsdk</b> file, then start the game.</p>' +
-            '<input id="rsdk-file" type="file" accept=".rsdk,application/octet-stream" hidden>' +
-            '<button class="rsdk-button" id="rsdk-choose">Choose Data.rsdk</button>' +
-            '<button class="rsdk-button" id="rsdk-start" disabled>Start Game</button>' +
-            '<p id="rsdk-status" role="status">Preparing the game engine… You can select your Data.rsdk while it loads.</p>';
-        document.body.insertBefore(panel, document.body.firstChild);
+        var panel = document.getElementById("rsdk-launcher");
+        if (!panel) return;
         launcherPanel = panel;
+        launcherStatus = document.getElementById("rsdk-status");
+        window.rsdkSelectedData = null;
 
         var picker = document.getElementById("rsdk-file");
         var choose = document.getElementById("rsdk-choose");
         var start = document.getElementById("rsdk-start");
-        launcherStatus = document.getElementById("rsdk-status");
-        window.rsdkSelectedData = null;
+        if (!picker || !choose || !start || panel.dataset.rsdkWired === "1") return;
+        panel.dataset.rsdkWired = "1";
 
         choose.addEventListener("click", function () { picker.click(); });
         picker.addEventListener("change", async function () {
