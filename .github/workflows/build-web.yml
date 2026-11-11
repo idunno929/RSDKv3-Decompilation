@@ -82,31 +82,35 @@ jobs:
             -DRETRO_USE_HW_RENDER=OFF \
             -DRETRO_MOD_LOADER=ON \
             -DRETRO_DISABLE_PLUS=ON \
-            -DCMAKE_BUILD_TYPE=Release \
+            -DCMAKE_BUILD_TYPE=Release
 
       - name: Compile WebAssembly build
         run: cmake --build build-web --parallel 2
 
-      - name: Package downloadable browser build
+      - name: Package standalone Chromebook build
         run: |
           cat > build-web/README-Web.txt <<'EOF'
-          RSDKv3 WebAssembly build
-          ========================
+          RSDKv3 Standalone Chromebook Build
+          ==================================
 
-          This ZIP contains the browser build files. Keep the HTML, JavaScript,
-          and WebAssembly files together in the same folder.
+          1. Extract this ZIP into a folder.
+          2. Open RSDKv3.html in Chrome.
+          3. Choose your legally obtained Data.rsdk file.
+          4. Wait for the engine to become ready, then choose Start Game.
 
-          Select your legally obtained Data.rsdk using the in-game file picker.
-          The browser stores the selected data and save files in local browser
-          storage for this browser profile.
+          This package embeds the JavaScript and WebAssembly engine in the HTML
+          file. It is designed to be opened directly as a local file and does
+          not require GitHub Pages, Linux, Developer Mode, or a local server.
 
-          This is an experimental build. Browser security rules may prevent
-          opening the HTML directly from file://. If that happens, the files
-          need to be opened from a local or HTTPS origin. Do not move or rename
-          the companion JavaScript or WebAssembly files.
+          The selected Data.rsdk is held in memory for the current session.
+          Select it again after closing or refreshing the page. Browser save
+          persistence is not enabled in this first standalone launcher build.
+
+          OGV cutscenes are currently unavailable in this WebAssembly build.
+          Keep the original game data file safe; this launcher does not modify it.
           EOF
           cd build-web
-          zip -9 RSDKv3-Web.zip RSDKv3.html RSDKv3.js RSDKv3.wasm README-Web.txt
+          zip -9 RSDKv3-Web.zip RSDKv3.html README-Web.txt
 
       - name: Upload downloadable browser build
         uses: actions/upload-artifact@v4
