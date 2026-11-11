@@ -1,121 +1,116 @@
-// Browser bootstrap for the RSDKv3 WebAssembly build.
-// The engine starts only after the user selects a legally obtained Data.rsdk.
+// Standalone Chromebook launcher for the RSDKv3 WebAssembly build.
+// This UI is created before WebAssembly initialization so it remains visible
+// even while the engine is compiling. The game starts only after Data.rsdk is chosen.
 var Module = typeof Module !== "undefined" ? Module : {};
 Module.noInitialRun = true;
-Module.preRun = Module.preRun || [];
-Module.preRun.push(function () {
-    FS.mkdir("/persistent");
-    FS.mount(IDBFS, {}, "/persistent");
-    addRunDependency("persistent-filesystem");
-    FS.syncfs(true, function (error) {
-        if (error)
-            console.error("Could not restore browser save data:", error);
-        removeRunDependency("persistent-filesystem");
-    });
-});
+Module.print = function (text) { console.log(text); };
+Module.printErr = function (text) { console.error(text); };
 
-Module.onRuntimeInitialized = function () {
-    var canvas = document.getElementById("canvas");
-    var panel = document.createElement("section");
-    panel.id = "rsdk-browser-loader";
-    panel.style.cssText = "max-width:560px;margin:24px auto;padding:24px;border-radius:12px;background:#171923;color:#fff;font:16px system-ui;text-align:center;box-shadow:0 8px 32px #0006";
-    panel.innerHTML =
-        '<h1 style="margin:0 0 8px">Sonic CD — Browser Build</h1>' +
-        '<p style="opacity:.8">Choose your own Data.rsdk file to start. Your file and save data stay in this browser.</p>' +
-        '<input id="rsdk-file" type="file" accept=".rsdk,application/octet-stream" style="display:none">' +
-        '<button id="rsdk-choose" style="padding:12px 18px;margin:6px;border:0;border-radius:8px;font-weight:700;cursor:pointer">Choose Data.rsdk</button>' +
-        '<button id="rsdk-start" style="padding:12px 18px;margin:6px;border:0;border-radius:8px;font-weight:700;cursor:pointer" disabled>Start Game</button>' +
-        '<button id="rsdk-fullscreen" style="padding:12px 18px;margin:6px;border:0;border-radius:8px;cursor:pointer">Fullscreen</button>' +
-        '<p id="rsdk-status" role="status" style="min-height:24px;opacity:.85"></p>';
-    document.body.insertBefore(panel, canvas || document.body.firstChild);
-    if (canvas) {
-        canvas.tabIndex = 0;
-        canvas.style.display = "block";
-        canvas.style.width = "min(100%, 960px)";
-        canvas.style.height = "auto";
-        canvas.style.margin = "16px auto";
-        canvas.style.background = "#000";
-    }
+(function () {
+    function createLauncher() {
+        if (document.getElementById("rsdk-launcher")) return;
 
-    var picker = document.getElementById("rsdk-file");
-    var choose = document.getElementById("rsdk-choose");
-    var start = document.getElementById("rsdk-start");
-    var fullscreen = document.getElementById("rsdk-fullscreen");
-    var status = document.getElementById("rsdk-status");
-    var started = false;
+        var style = document.createElement("style");
+        style.textContent =
+            "html,body{margin:0;min-height:100%;background:#101522;color:#fff;font-family:system-ui,sans-serif}" +
+            "#rsdk-launcher{box-sizing:border-box;width:min(92%,620px);margin:7vh auto 24px;padding:28px 22px;text-align:center;background:#1b263b;border:1px solid #34445f;border-radius:18px;box-shadow:0 16px 50px #0008}" +
+            "#rsdk-launcher h1{font-size:clamp(25px,5vw,38px);margin:0 0 8px}#rsdk-launcher p{line-height:1.5;color:#d3dced}" +
+            ".rsdk-button{display:inline-block;margin:7px;padding:13px 20px;border:0;border-radius:10px;background:#f5c542;color:#172033;font-size:16px;font-weight:700;cursor:pointer}" +
+            ".rsdk-button:disabled{opacity:.45;cursor:default}#rsdk-status{min-height:48px;margin-top:14px;font-size:14px}" +
+            "#canvas{display:block;width:min(100%,960px);height:auto;margin:12px auto;background:#000}";
+        document.head.appendChild(style);
 
-    // Keep fullscreen available after the start panel is dismissed.
-    fullscreen.style.position = "fixed";
-    fullscreen.style.top = "12px";
-    fullscreen.style.right = "12px";
-    fullscreen.style.zIndex = "1000";
-    document.body.appendChild(fullscreen);
+        var panel = document.createElement("main");
+        panel.id = "rsdk-launcher";
+        panel.innerHTML =
+            '<h1>Sonic CD — RSDKv3</h1>' +
+            '<p>Choose your legally obtained <b>Data.rsdk</b> file, then start the game.</p>' +
+            '<input id="rsdk-file" type="file" accept=".rsdk,application/octet-stream" hidden>' +
+            '<button class="rsdk-button" id="rsdk-choose">Choose Data.rsdk</button>' +
+            '<button class="rsdk-button" id="rsdk-start" disabled>Start Game</button>' +
+            '<p id="rsdk-status" role="status">Preparing the game engine… You can select your Data.rsdk while it loads.</p>';
+        document.body.insertBefore(panel, document.body.firstChild);
 
-    function hasDataFile() {
-        return FS.analyzePath("/persistent/Data.rsdk").exists;
-    }
-    function updateReady() {
-        start.disabled = !hasDataFile() || started;
-        status.textContent = hasDataFile()
-            ? "Data.rsdk is ready. Your browser keeps it for next time."
-            : "Select the Data.rsdk file from your Sonic CD 2011 installation.";
-    }
-    function syncFilesystem() {
-        return new Promise(function (resolve, reject) {
-            FS.syncfs(false, function (error) {
-                if (error) reject(error);
-                else resolve();
-            });
-        });
-    }
+        var picker = document.getElementById("rsdk-file");
+        var choose = document.getElementById("rsdk-choose");
+        var start = document.getElementById("rsdk-start");
+        var status = document.getElementById("rsdk-status");
+        var selectedData = null;
+        var engineReady = false;
+        var started = false;
 
-    choose.addEventListener("click", function () { picker.click(); });
-    picker.addEventListener("change", async function () {
-        var file = picker.files && picker.files[0];
-        if (!file) return;
-        if (!/\.rsdk$/i.test(file.name)) {
-            status.textContent = "Please choose a .rsdk data file.";
-            return;
+        function updateStart() {
+            start.disabled = !(selectedData && engineReady && !started);
+            if (started) return;
+            if (selectedData && engineReady)
+                status.textContent = "Data.rsdk is ready. Select Start Game to launch Sonic CD.";
+            else if (selectedData)
+                status.textContent = "Data.rsdk selected. Waiting for the engine to finish preparing…";
+            else if (engineReady)
+                status.textContent = "Engine ready. Choose your Data.rsdk file to continue.";
         }
-        choose.disabled = true;
-        status.textContent = "Copying game data into browser storage…";
-        try {
-            FS.writeFile("/persistent/Data.rsdk", new Uint8Array(await file.arrayBuffer()));
-            await syncFilesystem();
-            status.textContent = "Data.rsdk saved in this browser.";
-            updateReady();
-        } catch (error) {
-            console.error(error);
-            status.textContent = "Could not save the file. Check available browser storage and try again.";
-        } finally {
-            choose.disabled = false;
-        }
-    });
-    start.addEventListener("click", function () {
-        if (!hasDataFile() || started) return;
-        started = true;
-        start.disabled = true;
-        choose.disabled = true;
-        status.textContent = "Starting the engine…";
-        panel.style.display = "none";
-        if (canvas) canvas.focus();
-        // Periodically flush save/settings changes to IndexedDB.
-        window.setInterval(function () {
-            syncFilesystem().catch(function (error) { console.error("Save sync failed:", error); });
-        }, 10000);
-        document.addEventListener("visibilitychange", function () {
-            if (document.hidden)
-                syncFilesystem().catch(function (error) { console.error("Save sync failed:", error); });
-        });
-        Module.callMain([]);
-    });
-    fullscreen.addEventListener("click", function () {
-        var target = document.documentElement;
-        if (target.requestFullscreen) target.requestFullscreen();
-    });
 
-    updateReady();
-};
-Module.onAbort = function (reason) {
-    console.error("RSDKv3 stopped:", reason);
-};
+        choose.addEventListener("click", function () { picker.click(); });
+        picker.addEventListener("change", async function () {
+            var file = picker.files && picker.files[0];
+            if (!file) return;
+            if (!/\.rsdk$/i.test(file.name)) {
+                status.textContent = "That file does not have an .rsdk extension. Please choose Data.rsdk.";
+                return;
+            }
+            choose.disabled = true;
+            status.textContent = "Reading Data.rsdk…";
+            try {
+                selectedData = new Uint8Array(await file.arrayBuffer());
+                status.textContent = "Data.rsdk loaded into memory.";
+                updateStart();
+            } catch (error) {
+                console.error(error);
+                selectedData = null;
+                status.textContent = "The browser could not read that file. Please try selecting it again.";
+            } finally {
+                choose.disabled = false;
+            }
+        });
+
+        start.addEventListener("click", function () {
+            if (!selectedData || !engineReady || started) return;
+            try {
+                // The engine looks for Engine.dataFile (Data.rsdk) in its working directory.
+                FS.writeFile("/Data.rsdk", selectedData);
+                started = true;
+                panel.style.display = "none";
+                var canvas = document.getElementById("canvas");
+                if (canvas) {
+                    canvas.tabIndex = 0;
+                    canvas.focus();
+                }
+                Module.callMain([]);
+            } catch (error) {
+                console.error(error);
+                status.textContent = "Could not prepare Data.rsdk for the engine: " + error;
+                started = false;
+                panel.style.display = "block";
+                updateStart();
+            }
+        });
+
+        Module.onRuntimeInitialized = function () {
+            engineReady = true;
+            updateStart();
+        };
+        Module.onAbort = function (reason) {
+            status.textContent = "The engine stopped while starting: " + reason;
+            panel.style.display = "block";
+            console.error("RSDKv3 stopped:", reason);
+        };
+        Module.setStatus = function (message) {
+            if (!started && message) status.textContent = message;
+        };
+    }
+
+    if (document.readyState === "loading")
+        document.addEventListener("DOMContentLoaded", createLauncher);
+    else
+        createLauncher();
+})();
