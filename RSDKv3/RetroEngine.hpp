@@ -49,6 +49,7 @@ typedef unsigned int uint;
 #define RETRO_VITA (7)
 #define RETRO_UWP  (8)
 #define RETRO_LINUX (9)
+#define RETRO_WEB (10)
 
 // Platform types (Game manages platform-specific code such as HUD position using this rather than the above)
 #define RETRO_STANDARD (0)
@@ -83,6 +84,8 @@ typedef unsigned int uint;
 #define RETRO_PLATFORM (RETRO_ANDROID)
 #elif defined __vita__
 #define RETRO_PLATFORM (RETRO_VITA)
+#elif defined __EMSCRIPTEN__
+#define RETRO_PLATFORM (RETRO_WEB)
 #elif defined __linux__
 #define RETRO_PLATFORM (RETRO_LINUX)
 #else
@@ -112,7 +115,7 @@ typedef unsigned int uint;
 #endif
 
 #if RETRO_PLATFORM == RETRO_WIN || RETRO_PLATFORM == RETRO_OSX || RETRO_PLATFORM == RETRO_iOS || RETRO_PLATFORM == RETRO_VITA                        \
-    || RETRO_PLATFORM == RETRO_UWP || RETRO_PLATFORM == RETRO_ANDROID || RETRO_PLATFORM == RETRO_LINUX
+    || RETRO_PLATFORM == RETRO_UWP || RETRO_PLATFORM == RETRO_ANDROID || RETRO_PLATFORM == RETRO_LINUX || RETRO_PLATFORM == RETRO_WEB
 #ifdef RETRO_USE_SDL2
 #define RETRO_USING_SDL1 (0)
 #define RETRO_USING_SDL2 (1)
@@ -201,7 +204,7 @@ typedef unsigned int uint;
 #define RETRO_GAMEPLATFORMID (RETRO_WIN)
 #elif RETRO_PLATFORM == RETRO_UWP
 #define RETRO_GAMEPLATFORMID (UAP_GetRetroGamePlatformId())
-#elif RETRO_PLATFORM == RETRO_LINUX
+#elif RETRO_PLATFORM == RETRO_LINUX || RETRO_PLATFORM == RETRO_WEB
 #define RETRO_GAMEPLATFORMID (RETRO_STANDARD)
 #else
 #error Unspecified RETRO_GAMEPLATFORMID

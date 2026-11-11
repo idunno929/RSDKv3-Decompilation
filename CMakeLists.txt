@@ -167,6 +167,10 @@ target_include_directories(RetroEngine PRIVATE
     dependencies/all/tinyxml2/
 )
 
+if(DEFINED DEP_PATH AND COMPILE_VORBIS)
+    target_include_directories(RetroEngine PRIVATE dependencies/${DEP_PATH}/libvorbis/include)
+endif()
+
 if(DEFINED DEP_PATH)
     target_include_directories(RetroEngine PRIVATE
         dependencies/${DEP_PATH}/
