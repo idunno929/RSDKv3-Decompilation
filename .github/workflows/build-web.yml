@@ -91,12 +91,19 @@ jobs:
       - name: Compile WebAssembly build
         run: cmake --build build-web --parallel 2
 
+      - name: Assemble browser launch page
+        run: |
+          cp platforms/web/index.html build-web/index.html
+          cp platforms/web/coi-serviceworker.js build-web/coi-serviceworker.js
+          mv build-web/RSDKv3.html build-web/engine.html
+
       - name: Upload browser build
         uses: actions/upload-artifact@v4
         with:
           name: rsdkv3-webassembly
           path: |
             build-web/*.html
+            build-web/coi-serviceworker.js
             build-web/*.js
             build-web/*.wasm
             build-web/*.data

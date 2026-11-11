@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#111827">
+  <title>Sonic CD — Browser Build</title>
+  <style>
+    * { box-sizing: border-box; }
+    body { margin: 0; min-height: 100vh; display: grid; place-items: center; padding: 24px; background: #090d18; color: #f8fafc; font: 16px system-ui, sans-serif; }
+    main { width: min(720px, 100%); padding: 28px; border: 1px solid #334155; border-radius: 16px; background: #111827; text-align: center; }
+    h1 { margin-top: 0; }
+    p { color: #cbd5e1; line-height: 1.55; }
+    iframe { display: block; width: 100%; height: min(80vh, 720px); border: 0; border-radius: 10px; background: #000; }
+    .hint { font-size: 13px; color: #94a3b8; }
+  </style>
+  <script src="./coi-serviceworker.js"></script>
+</head>
+<body>
+  <main id="app">
+    <h1>Sonic CD — Browser Build</h1>
+    <p id="status">Preparing the browser for game audio and video…</p>
+    <p class="hint">The first visit may refresh once to enable browser threading. This is required by the original video decoder.</p>
+  </main>
+  <script>
+    (async function () {
+      const status = document.getElementById("status");
+      const state = await window.coiServiceWorker.settled;
+      if (state.status !== "isolated") {
+        status.textContent = "This browser could not enable the required isolated mode (" + (state.reason || state.status) + "). Open this page over HTTPS in Chrome and reload.";
+        return;
+      }
+      const frame = document.createElement("iframe");
+      frame.title = "Sonic CD game";
+      frame.allow = "autoplay; fullscreen; cross-origin-isolated";
+      frame.allowFullscreen = true;
+      frame.src = "./engine.html";
+      document.getElementById("app").replaceChildren(frame);
+    })();
+  </script>
+</body>
+</html>
