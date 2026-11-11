@@ -31,4 +31,8 @@ target_link_options(RetroEngine PRIVATE
     --pre-js "${CMAKE_CURRENT_LIST_DIR}/web-loader.js"
 )
 
-set_target_properties(RetroEngine PROPERTIES SUFFIX ".html")
+# The packaging workflow expects RSDKv3.html and RSDKv3.js.
+set_target_properties(RetroEngine PROPERTIES
+    OUTPUT_NAME "RSDKv3"
+    SUFFIX ".html"
+)
