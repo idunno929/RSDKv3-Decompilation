@@ -4,7 +4,7 @@ int touchFlags = 0;
 
 void PrintLog(const char *msg, ...)
 {
-    if (engineDebugMode || Engine.consoleEnabled) {
+    if (engineDebugMode || Engine.consoleEnabled || RETRO_PLATFORM == RETRO_WEB) {
         char buffer[0x100];
 
         // make the full string
