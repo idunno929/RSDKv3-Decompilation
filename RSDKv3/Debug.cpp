@@ -4,14 +4,18 @@ int touchFlags = 0;
 
 void PrintLog(const char *msg, ...)
 {
-    if (engineDebugMode || Engine.consoleEnabled || RETRO_PLATFORM == RETRO_WEB) {
+    bool shouldLog = engineDebugMode || Engine.consoleEnabled;
+#ifdef __EMSCRIPTEN__
+    shouldLog = true;
+#endif
+    if (shouldLog) {
         char buffer[0x100];
 
         // make the full string
         va_list args;
         va_start(args, msg);
         vsprintf(buffer, msg, args);
-#if RETRO_PLATFORM == RETRO_WEB
+#ifdef __EMSCRIPTEN__
         // Route web diagnostics through stderr so the standalone launcher can display them.
         fprintf(stderr, "%s\n", buffer);
 #else
