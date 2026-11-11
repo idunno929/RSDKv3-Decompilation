@@ -51,14 +51,29 @@ jobs:
           mv dependencies/web/libtheora-1.1.1 dependencies/web/libtheora
           cp dependencies/android/config_types.h dependencies/web/libogg/include/ogg/config_types.h
 
+          PREFIX="$GITHUB_WORKSPACE/dependencies/web/install"
+          mkdir -p "$PREFIX"
+
           cd dependencies/web/libogg
-          emconfigure ./configure --disable-shared --enable-static
-          cd ../libvorbis
-          emconfigure ./configure --disable-shared --enable-static --with-ogg="$GITHUB_WORKSPACE/dependencies/web/libogg"
-          cd ../libtheora
-          emconfigure ./configure --disable-shared --enable-static --disable-encode --disable-examples --disable-spec --disable-doc \
-            --with-ogg="$GITHUB_WORKSPACE/dependencies/web/libogg" \
-            --with-vorbis="$GITHUB_WORKSPACE/dependencies/web/libvorbis"
+          emconfigure ./configure --prefix="$PREFIX" --disable-shared --enable-static
+          emmake make -j2
+          emmake make install
+
+          export PKG_CONFIG_PATH="$PREFIX/lib/pkgconfig"
+          export CPPFLAGS="-I$PREFIX/include"
+          export LDFLAGS="-L$PREFIX/lib"
+
+          cd "$GITHUB_WORKSPACE/dependencies/web/libvorbis"
+          emconfigure ./configure --prefix="$PREFIX" --disable-shared --enable-static --with-ogg="$PREFIX"
+          emmake make -j2
+          emmake make install
+
+          cd "$GITHUB_WORKSPACE/dependencies/web/libtheora"
+          emconfigure ./configure --prefix="$PREFIX" --disable-shared --enable-static --disable-encode --disable-examples --disable-spec --disable-doc \
+            --with-ogg="$PREFIX" \
+            --with-vorbis="$PREFIX"
+          emmake make -j2
+          emmake make install
 
       - name: Configure WebAssembly build
         run: |
