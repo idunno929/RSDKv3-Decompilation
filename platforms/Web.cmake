@@ -28,6 +28,7 @@ target_link_options(RetroEngine PRIVATE
     -sASYNCIFY=1
     -sEXPORTED_RUNTIME_METHODS=callMain
     -sEXIT_RUNTIME=0
+    --shell-file "${CMAKE_CURRENT_LIST_DIR}/web-shell.html"
     --pre-js "${CMAKE_CURRENT_LIST_DIR}/web-loader.js"
 )
 
