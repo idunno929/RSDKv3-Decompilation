@@ -83,8 +83,6 @@ jobs:
             -DRETRO_MOD_LOADER=ON \
             -DRETRO_DISABLE_PLUS=ON \
             -DCMAKE_BUILD_TYPE=Release \
-            -DCMAKE_C_FLAGS="-pthread" \
-            -DCMAKE_CXX_FLAGS="-pthread"
 
       - name: Compile WebAssembly build
         run: cmake --build build-web --parallel 2
