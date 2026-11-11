@@ -29,6 +29,7 @@ target_link_options(RetroEngine PRIVATE
     -lidbfs.js
     -sPTHREAD_POOL_SIZE=2
     -sEXIT_RUNTIME=0
+    --pre-js "${CMAKE_CURRENT_LIST_DIR}/web-loader.js"
 )
 
 set_target_properties(RetroEngine PROPERTIES SUFFIX ".html")

@@ -33,7 +33,7 @@ jobs:
       - name: Install build tools
         run: |
           sudo apt-get update
-          sudo apt-get install -y autoconf automake libtool pkg-config
+          sudo apt-get install -y autoconf automake libtool pkg-config zip
 
       - name: Download and prepare Ogg, Vorbis and Theora
         shell: bash
@@ -69,8 +69,6 @@ jobs:
           emmake make install
 
           cd "$GITHUB_WORKSPACE/dependencies/web/libtheora"
-          # Theora 1.1.1's x86/MMX assembly cannot be assembled for WebAssembly.
-          # Keep the portable C decoder and disable only architecture-specific optimizations.
           emconfigure ./configure --prefix="$PREFIX" --disable-shared --enable-static --disable-asm --disable-encode --disable-examples --disable-spec --disable-doc \
             --with-ogg="$PREFIX" \
             --with-vorbis="$PREFIX"
@@ -91,52 +89,30 @@ jobs:
       - name: Compile WebAssembly build
         run: cmake --build build-web --parallel 2
 
-      - name: Assemble browser launch page
+      - name: Package downloadable browser build
         run: |
-          cp platforms/web/index.html build-web/index.html
-          cp platforms/web/coi-serviceworker.js build-web/coi-serviceworker.js
-          mv build-web/RSDKv3.html build-web/engine.html
-          touch build-web/.nojekyll
+          cat > build-web/README-Web.txt <<'EOF'
+          RSDKv3 WebAssembly build
+          ========================
 
-      - name: Upload browser build
+          This ZIP contains the browser build files. Keep the HTML, JavaScript,
+          and WebAssembly files together in the same folder.
+
+          Select your legally obtained Data.rsdk using the in-game file picker.
+          The browser stores the selected data and save files in local browser
+          storage for this browser profile.
+
+          This is an experimental build. Browser security rules may prevent
+          opening the HTML directly from file://. If that happens, the files
+          need to be opened from a local or HTTPS origin. Do not move or rename
+          the companion JavaScript or WebAssembly files.
+          EOF
+          cd build-web
+          zip -9 RSDKv3-Web.zip RSDKv3.html RSDKv3.js RSDKv3.wasm README-Web.txt
+
+      - name: Upload downloadable browser build
         uses: actions/upload-artifact@v4
         with:
           name: rsdkv3-webassembly
-          path: |
-            build-web/*.html
-            build-web/coi-serviceworker.js
-            build-web/.nojekyll
-            build-web/*.js
-            build-web/*.wasm
-            build-web/*.data
+          path: build-web/RSDKv3-Web.zip
           if-no-files-found: error
-
-  deploy-pages:
-    if: github.ref == 'refs/heads/web' && github.event_name != 'pull_request'
-    needs: webassembly
-    runs-on: ubuntu-latest
-    permissions:
-      contents: read
-      pages: write
-      id-token: write
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
-    steps:
-      - name: Download browser build
-        uses: actions/download-artifact@v4
-        with:
-          name: rsdkv3-webassembly
-          path: dist
-
-      - name: Configure GitHub Pages
-        uses: actions/configure-pages@v5
-
-      - name: Upload Pages artifact
-        uses: actions/upload-pages-artifact@v4
-        with:
-          path: dist
-
-      - name: Deploy to GitHub Pages
-        id: deployment
-        uses: actions/deploy-pages@v4
