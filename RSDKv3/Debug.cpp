@@ -11,7 +11,12 @@ void PrintLog(const char *msg, ...)
         va_list args;
         va_start(args, msg);
         vsprintf(buffer, msg, args);
+#if RETRO_PLATFORM == RETRO_WEB
+        // Route web diagnostics through stderr so the standalone launcher can display them.
+        fprintf(stderr, "%s\n", buffer);
+#else
         printf("%s\n", buffer);
+#endif
         sprintf(buffer, "%s\n", buffer);
 
         if (engineDebugMode) {
