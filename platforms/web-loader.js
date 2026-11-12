@@ -96,7 +96,7 @@ Module.printErr = function (text) {
             }
         });
 
-        start.addEventListener("click", function () {
+        start.addEventListener("click", async function () {
             var data = window.rsdkSelectedData;
             if (!data || !engineReady || started) return;
             try {
@@ -110,12 +110,13 @@ Module.printErr = function (text) {
                     canvas.focus();
                 }
                 rsdkWriteOutput("Launcher: Start Game clicked; calling Module.callMain.");
-                Module.callMain([]);
-                rsdkWriteOutput("Launcher: Module.callMain returned.");
+                await Module.callMain([]);
+                rsdkWriteOutput("Launcher: Module.callMain finished; the engine main function exited.");
             } catch (error) {
                 rsdkWriteOutput("Launcher error: " + (error && error.stack ? error.stack : error));
                 console.error(error);
-                launcherStatus.textContent = "Could not prepare Data.rsdk for the engine: " + error;
+                if (launcherStatus)
+                    launcherStatus.textContent = "The engine stopped while starting: " + error;
                 started = false;
                 panel.style.display = "block";
                 updateStart();
