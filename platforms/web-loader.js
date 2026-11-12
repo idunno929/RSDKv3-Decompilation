@@ -12,7 +12,7 @@ function rsdkWriteOutput(message) {
 Module.print = function (text) {
     var output = document.getElementById("output");
     if (output) {
-        output.value += String(text) + "\\n";
+        output.value += String(text) + "\n";
         if (window.rsdkLaunchStarted) output.style.display = "block";
         output.scrollTop = output.scrollHeight;
     }
@@ -21,7 +21,7 @@ Module.print = function (text) {
 Module.printErr = function (text) {
     var output = document.getElementById("output");
     if (output) {
-        output.value += "ERROR: " + String(text) + "\\n";
+        output.value += "ERROR: " + String(text) + "\n";
         if (window.rsdkLaunchStarted) output.style.display = "block";
         output.scrollTop = output.scrollHeight;
     }
@@ -115,8 +115,19 @@ Module.printErr = function (text) {
                     canvas.focus();
                 }
                 rsdkWriteOutput("Launcher: Start Game clicked; calling Module.callMain.");
+                rsdkWriteOutput("Launcher: file check: " + (FS.analyzePath("/persistent/Data.rsdk").exists ? "Data.rsdk exists" : "Data.rsdk MISSING"));
+                if (FS.analyzePath("/persistent/Data.rsdk").exists) {
+                    rsdkWriteOutput("Launcher: Data.rsdk size: " + FS.stat("/persistent/Data.rsdk").size + " bytes.");
+                }
+                rsdkWriteOutput("Launcher: virtual filesystem working directory: " + FS.cwd());
                 await Module.callMain([]);
                 rsdkWriteOutput("Launcher: Module.callMain finished; the engine main function exited.");
+                ["/usage.txt", "/persistent/usage.txt"].forEach(function (path) {
+                    if (FS.analyzePath(path).exists) {
+                        rsdkWriteOutput("Launcher: found " + path + ":");
+                        rsdkWriteOutput(FS.readFile(path, { encoding: "utf8" }));
+                    }
+                });
             } catch (error) {
                 rsdkWriteOutput("Launcher error: " + (error && error.stack ? error.stack : error));
                 console.error(error);
