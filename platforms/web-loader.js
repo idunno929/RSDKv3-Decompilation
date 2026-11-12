@@ -100,7 +100,12 @@ Module.printErr = function (text) {
             var data = window.rsdkSelectedData;
             if (!data || !engineReady || started) return;
             try {
-                FS.writeFile("/Data.rsdk", data);
+                if (!FS.analyzePath("/persistent").exists) {
+                    FS.mkdir("/persistent");
+                    rsdkWriteOutput("Launcher: created /persistent/ game-data directory.");
+                }
+                FS.writeFile("/persistent/Data.rsdk", data);
+                rsdkWriteOutput("Launcher: Data.rsdk saved to /persistent/Data.rsdk.");
                 started = true;
                 window.rsdkLaunchStarted = true;
                 panel.style.display = "none";
