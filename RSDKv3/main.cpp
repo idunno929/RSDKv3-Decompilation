@@ -58,6 +58,8 @@ int main(int argc, char *argv[])
 #endif
 
 #ifdef __EMSCRIPTEN__
+    printf("Web startup: main() entered\\n");
+    fflush(stdout);
     EM_ASM({
         var output = document.getElementById("output");
         if (output) {
@@ -68,6 +70,10 @@ int main(int argc, char *argv[])
     });
 #endif
     Engine.Init();
+#ifdef __EMSCRIPTEN__
+    printf("Web startup: Engine.Init() returned\\n");
+    fflush(stdout);
+#endif
 #ifdef __EMSCRIPTEN__
     EM_ASM({
         var output = document.getElementById("output");
