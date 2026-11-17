@@ -53,8 +53,21 @@ void parseArguments(int argc, char *argv[])
 
 int main(int argc, char *argv[])
 {
+#ifdef __EMSCRIPTEN__
+    // Keep the browser entry point independent of native command-line parsing.
+    EM_ASM({
+        var output = document.getElementById("output");
+        if (output) {
+            output.style.display = "block";
+            output.value += "Web startup: main() entered before argument parsing\\n";
+            output.scrollTop = output.scrollHeight;
+        }
+    });
+    fprintf(stderr, "Web startup: main() entered before argument parsing\\n");
+#else
 #if !RETRO_USE_ORIGINAL_CODE
     parseArguments(argc, argv);
+#endif
 #endif
 
 #ifdef __EMSCRIPTEN__
