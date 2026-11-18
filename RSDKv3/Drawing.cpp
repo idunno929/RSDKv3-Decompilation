@@ -202,6 +202,11 @@ int InitRenderDevice()
 
     SDL_SetWindowPosition(Engine.window, SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED);
 
+#ifdef __EMSCRIPTEN__
+    // Browsers do not reliably expose native display-mode information.
+    // Use a stable refresh rate for the WebAssembly build.
+    Engine.screenRefreshRate = 60;
+#else
     SDL_DisplayMode disp;
     int winID = SDL_GetWindowDisplayIndex(Engine.window);
     if (SDL_GetCurrentDisplayMode(winID, &disp) == 0) {
@@ -210,6 +215,7 @@ int InitRenderDevice()
     else {
         printf("error: %s", SDL_GetError());
     }
+#endif
 
 #endif
 
